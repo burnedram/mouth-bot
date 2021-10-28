@@ -1,10 +1,9 @@
 import 'reflect-metadata'; // required for discordx
 
+import secrets from './secrets.json';
 import path from 'path';
 import { Client } from 'discordx';
 import { Intents } from 'discord.js';
-
-const BOT_TOKEN = 'lolno';
 
 const client = new Client({
   prefix: '!',
@@ -35,4 +34,4 @@ client.on('messageCreate', (message) => {
 });
 */
 
-client.login(BOT_TOKEN);
+client.login(secrets.botToken);
