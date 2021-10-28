@@ -4,16 +4,16 @@ import {
   joinVoiceChannel,
   VoiceConnection
 } from '@discordjs/voice';
-import { CommandInteraction, GuildMember, Message } from 'discord.js';
+import { CommandInteraction, GuildMember } from 'discord.js';
 import { Discord, Slash } from 'discordx';
-import { getAudioPlayer } from '../players';
+import { Player } from '../player';
 import { getGuildMember } from '../util';
 
 @Discord()
 class JoinCommand {
   @Slash('join')
   async join(command: CommandInteraction) {
-    await command.reply('Joining...');
+    await command.deferReply();
     const member = getGuildMember(command);
     if (!member) return;
 
@@ -54,8 +54,8 @@ export function join(
     });
     command.editReply(`Joined ${voiceChannel.name}!`);
 
-    const audioPlayer = getAudioPlayer(voiceConnection);
-    if (audioPlayer) voiceConnection.subscribe(audioPlayer);
+    const player = Player.find(guild.id);
+    if (player) player.subscribe(voiceConnection);
   } else if (verbose) {
     command.editReply(`I'm already here!`);
   }

@@ -1,14 +1,14 @@
 import { getVoiceConnection } from '@discordjs/voice';
 import { CommandInteraction } from 'discord.js';
 import { Discord, Slash } from 'discordx';
-import { stopAudioPlayer } from '../players';
+import { Player } from '../player';
 import { getGuildMember } from '../util';
 
 @Discord()
 class PlayCommand {
   @Slash('stop')
   async stop(command: CommandInteraction) {
-    await command.reply('Stopping current song...');
+    await command.deferReply();
     const member = getGuildMember(command);
     if (!member) return;
     const guild = member.guild;
@@ -24,8 +24,11 @@ class PlayCommand {
       return;
     }
 
-    const metadata = stopAudioPlayer(voiceConnection);
-    if (!metadata) command.editReply('Nothing to stop :)');
-    else command.editReply(`Stopped ${metadata.info.videoDetails.title}!`);
+    const player = Player.find(guild.id);
+    if (!player) command.editReply('Nothing to stop :)');
+    else {
+      command.editReply(`Stopped ${player.current.info.videoDetails.title}!`);
+      player.stop();
+    }
   }
 }

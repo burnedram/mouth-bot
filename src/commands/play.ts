@@ -1,13 +1,7 @@
 import { Discord, Slash, SlashOption } from 'discordx';
-import {
-  createAudioResource,
-  AudioPlayerStatus,
-  AudioResource,
-  VoiceConnectionStatus
-} from '@discordjs/voice';
-import { getYoutubeInfo, YoutubeInfo } from '../youtube';
+import { getYoutubeInfo } from '../youtube';
 import { CommandInteraction, MessageEmbed } from 'discord.js';
-import { getOrCreateAudioPlayer, stopAudioPlayer } from '../players';
+import { Player } from '../player';
 import { join } from './join';
 import { getGuildMember } from '../util';
 
@@ -22,40 +16,33 @@ class PlayCommand {
     query: string,
     command: CommandInteraction
   ) {
-    await command.reply('Looking it up...');
+    await command.deferReply();
 
     const member = getGuildMember(command);
     if (!member) return;
 
-    const youtubeInfo = await getYoutubeInfo(query);
+    command.editReply('Looking it up on YouTube...');
+
+    const info = await getYoutubeInfo(query);
 
     const voiceConnection = join(command, member);
     if (!voiceConnection) return;
 
-    command.editReply(`Found a ${youtubeInfo.provider} result for ${query}!`);
+    command.editReply(`Found a ${info.provider} result for ${query}!`);
 
-    const audioPlayer = getOrCreateAudioPlayer(voiceConnection);
-    voiceConnection.subscribe(audioPlayer);
-    audioPlayer.on('stateChange', (oldState, newState) => {
-      if (
-        oldState.status === AudioPlayerStatus.Idle &&
-        'resource' in newState
-      ) {
-        const audioResource = newState.resource as AudioResource<YoutubeInfo>;
-        const embed = new MessageEmbed().setDescription(
-          `Now playing [${audioResource.metadata.info.videoDetails.title}](${audioResource.metadata.info.videoDetails.video_url})!`
-        );
-        command.editReply({ embeds: [embed] });
-      } else if (newState.status === AudioPlayerStatus.Idle) {
-        stopAudioPlayer(voiceConnection);
-        if (voiceConnection.state.status !== VoiceConnectionStatus.Destroyed)
-          voiceConnection.destroy();
-      }
-    });
-
-    const audioResource = createAudioResource(youtubeInfo.chosenFormat.url, {
-      metadata: youtubeInfo
-    });
-    audioPlayer.play(audioResource);
+    let player = Player.find(member.guild.id);
+    if (!player) {
+      const embed = new MessageEmbed().setDescription(
+        `Now playing [${info.info.videoDetails.title}](${info.info.videoDetails.video_url})!`
+      );
+      command.editReply({ embeds: [embed] });
+      player = Player.create(member.guild.id, info);
+    } else {
+      const embed = new MessageEmbed().setDescription(
+        `Queued [${info.info.videoDetails.title}](${info.info.videoDetails.video_url})!`
+      );
+      command.editReply({ embeds: [embed] });
+      player.enqueue(info);
+    }
   }
 }
