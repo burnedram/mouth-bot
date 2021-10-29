@@ -11,7 +11,7 @@ import { getGuildMember } from '../util';
 
 @Discord()
 class JoinCommand {
-  @Slash('join')
+  @Slash('join', { description: 'Joins your channel' })
   async join(command: CommandInteraction) {
     await command.deferReply();
     const member = getGuildMember(command);

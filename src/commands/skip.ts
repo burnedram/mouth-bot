@@ -5,9 +5,13 @@ import { getGuildMember } from '../util';
 
 @Discord()
 class SkipCommand {
-  @Slash('skip')
+  @Slash('skip', { description: 'Skip some songs' })
   async skip(
-    @SlashOption('amount', { type: 'INTEGER' }) amount: number | undefined,
+    @SlashOption('amount', {
+      type: 'INTEGER',
+      description: 'Amount of songs to skip'
+    })
+    amount: number | undefined,
     command: CommandInteraction
   ) {
     await command.deferReply();

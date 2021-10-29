@@ -5,8 +5,10 @@ import { Player } from '../player';
 import { getGuildMember } from '../util';
 
 @Discord()
-class PlayCommand {
-  @Slash('stop')
+class StopCommand {
+  @Slash('stop', {
+    description: 'Stop playing, clear the queue and disconnect'
+  })
   async stop(command: CommandInteraction) {
     await command.deferReply();
     const member = getGuildMember(command);
