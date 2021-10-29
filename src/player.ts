@@ -9,7 +9,6 @@ import {
   VoiceConnection,
   VoiceConnectionStatus
 } from '@discordjs/voice';
-import { CommandInteraction } from 'discord.js';
 import { YoutubeInfo } from './youtube';
 
 export class Player {
@@ -33,6 +32,8 @@ export class Player {
   private readonly player: AudioPlayer = createAudioPlayer();
 
   private voiceSubscription?: PlayerSubscription;
+
+  private volume: number = 0.5;
 
   private constructor(
     public readonly guildId: string,
@@ -97,9 +98,26 @@ export class Player {
   private play(info: YoutubeInfo) {
     this.current = info;
     const resource = createAudioResource(info.chosenFormat.url, {
-      metadata: info
+      metadata: info,
+      inlineVolume: true
     });
+    resource.volume!.setVolume(this.volume);
     this.player.play(resource);
+  }
+
+  public setVolume(volume: number) {
+    this.volume = Math.max(0, Math.min(volume, 1));
+    this.getResource()?.volume!.setVolume(this.volume);
+    return this.volume;
+  }
+
+  public getVolume() {
+    return this.volume;
+  }
+
+  private getResource() {
+    if (!('resource' in this.player.state)) return undefined;
+    return this.player.state.resource as AudioResource<YoutubeInfo>;
   }
 
   public stop() {
